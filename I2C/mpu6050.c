@@ -135,6 +135,6 @@ float Comp_Filter(float *p_gyroValue, float *p_accelValue)
 //    if(driftingCounter > MAX_DRIFTING_COUNTER)  *p_gyroValue = *p_accelValue;
 
     // Filter
-    float alpha = 0.95;
+    float alpha = 0.97;
     return (float)(*p_gyroValue)*alpha + (float)(*p_accelValue)*(1-alpha);
 }

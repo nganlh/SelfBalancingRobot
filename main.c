@@ -14,15 +14,16 @@
 #include "Motor/L298.h"
 
 //***Compiler Option***********************************************************
-#define     CALIB
+//#define     CALIB
 //#define     DEBUG_UART
 //*****************************************************************************
 
 //***Definitions***************************************************************
-#define MOTOR_A_OFFSET           460
-#define MOTOR_B_OFFSET           478
+#define MOTOR_A_OFFSET           468
+#define MOTOR_B_OFFSET           475
 #define MAX_ANGLE                60
 #define TIMER_PERIOD                (SysCtlClockGet()/50)
+#define GYRO_DRIFTING_CONST     (float)(0.00118)
 #define NUM_OF_VALUES(a) ((unsigned long long)1 << \
         (sizeof(a) * 8))
 //*****************************************************************************
@@ -47,8 +48,8 @@ float gyroAngle = 0;
 float gyroRate;
 float filted_Angle;
 
-OffsetCalibration OFFSET = {62, 103, 32, 185, 8, 3740};
-PID_coefficient MotorPID = {25, 0.00004, 20};
+OffsetCalibration OFFSET = {62, -11, 32, 185, 8, 3740};
+PID_coefficient MotorPID = {25, 0.00008, 20};
 
 //**********DEBUG**************************************************************
 #ifdef DEBUG_UART
@@ -136,15 +137,15 @@ void Calib_IMU(void)
 
 
 
-//    for(i=0; i<NUM_OF_SAMPLES; i++)
-//    {
-//        getMPU6050Data();
-//        buffer[i] = gyroaxisX;
-////        SysCtlDelay(SysCtlClockGet()/150);
-//    }
-//    sum=0;
-//    for(i=0; i<NUM_OF_SAMPLES; i++) sum += buffer[i];
-//    OFFSET.gyro_x = sum/NUM_OF_SAMPLES;
+    for(i=0; i<NUM_OF_SAMPLES; i++)
+    {
+        getMPU6050Data();
+        buffer[i] = gyroaxisX;
+//        SysCtlDelay(SysCtlClockGet()/150);
+    }
+    sum=0;
+    for(i=0; i<NUM_OF_SAMPLES; i++) sum += buffer[i];
+    OFFSET.gyro_x = sum/NUM_OF_SAMPLES;
 
 //    for(i=0; i<NUM_OF_SAMPLES; i++)
 //    {
@@ -210,7 +211,7 @@ void Timer0AIntHandler(void)
 {
     getMPU6050Data();
     gyroRate = (float)(gyroaxisX - OFFSET.gyro_x)/MPU6050_GYRO_SCALE_FACTOR_2000;
-    gyroAngle += gyroRate*0.02f;
+    gyroAngle += (gyroRate*0.02f - GYRO_DRIFTING_CONST);
     timer_count++;
     TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
 }
